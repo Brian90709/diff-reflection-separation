@@ -1,4 +1,4 @@
-# Diff-Reflection-Separation
+# Reflection Separation from a Single Image via Joint Latent Diffusion
 
 ### CVPR 2026
 
