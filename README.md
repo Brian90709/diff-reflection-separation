@@ -10,11 +10,9 @@
 
 > **Reflection Separation from a Single Image via Joint Latent Diffusion**
 >
-> Zheng-Hui Huang<sup>1,2</sup>, Zhixiang Wang<sup>1,†</sup>, Yu-Lun Liu<sup>3,†</sup>, Yung-Yu Chuang<sup>2</sup>
+> Zheng-Hui Huang<sup>1,2</sup>, Zhixiang Wang<sup>1,*</sup>, Yu-Lun Liu<sup>3,*</sup>, Yung-Yu Chuang<sup>2</sup>
 >
 > <sup>1</sup>Shanda AI Research Tokyo, <sup>2</sup>National Taiwan University, <sup>3</sup>National Yang Ming Chiao Tung University
->
-> <sup>†</sup>Corresponding authors
 
 ## Abstract
 
