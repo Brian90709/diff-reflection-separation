@@ -10,9 +10,11 @@
 
 > **Reflection Separation from a Single Image via Joint Latent Diffusion**
 >
-> Zheng-Hui Huang, Zhixiang Wang, Yung-Yu Chuang, Yu-Lun Liu
+> Zheng-Hui Huang<sup>1,2</sup>, Zhixiang Wang<sup>1,†</sup>, Yung-Yu Chuang<sup>2</sup>, Yu-Lun Liu<sup>3,†</sup>
 >
-> Shanda AI Research Tokyo; National Taiwan University; National Yang Ming Chiao Tung University
+> <sup>1</sup>Shanda AI Research Tokyo, <sup>2</sup>National Taiwan University, <sup>3</sup>National Yang Ming Chiao Tung University
+>
+> <sup>†</sup>Corresponding authors
 
 ## Abstract
 
@@ -22,15 +24,3 @@ Single-image reflection separation remains challenging due to its ill-posed natu
 
 - [ ] Release code and pre-trained models.
 
-## Citation
-
-If you find this project helpful, please consider citing:
-
-```bibtex
-@inproceedings{huang2026reflection,
-  title={Reflection Separation from a Single Image via Joint Latent Diffusion},
-  author={Huang, Zheng-Hui and Wang, Zhixiang and Chuang, Yung-Yu and Liu, Yu-Lun},
-  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-  year={2026}
-}
-```
