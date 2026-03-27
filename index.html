@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta property="og:title" content="Reflection Separation from a Single Image via Joint Latent Diffusion" />
+  <meta property="og:description" content="CVPR 2026 - Joint latent diffusion for single-image reflection separation" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Reflection Separation from a Single Image via Joint Latent Diffusion</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0; padding: 0;
+      overflow: hidden;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #000;
+    }
+
+    #fullpage {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+
+    .fp-section {
+      width: 100%;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #page-nav {
+      position: fixed;
+      right: 1.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .nav-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      border: none;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      padding: 0;
+    }
+    .nav-dot.active { background: #fff; transform: scale(1.3); }
+    .nav-dot.dark { background: rgba(0,0,0,0.15); }
+    .nav-dot.dark.active { background: #333; }
+
+    /* Hero */
+    .sec-hero {
+      background: #1a1a1a;
+      color: #fff;
+      flex-direction: column;
+      padding: 2rem;
+    }
+    .sec-hero .publication-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      max-width: 1100px;
+      line-height: 1.3;
+      margin-bottom: 2rem;
+      opacity: 0; transform: translateY(40px);
+    }
+    .t-main { color: #fff; }
+    .t-blue { color: #2980b9; }
+    .t-red { color: #c0392b; }
+
+    .sec-hero .venue-badge {
+      display: inline-block;
+      background: #e74c3c;
+      color: #fff;
+      padding: 0.3rem 1.2rem;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      opacity: 0; transform: translateY(30px);
+    }
+
+    .sec-hero .publication-authors {
+      text-align: center;
+      max-width: 56rem;
+      font-size: 1.05rem;
+      color: #ccc;
+      opacity: 0; transform: translateY(30px);
+    }
+    .author-block { display: inline-block; margin: 0 0.3rem; }
+    .affiliations { margin-top: 0.75rem; font-size: 0.95rem; color: #999; }
+
+    .sec-hero .publication-links {
+      margin-top: 1.5rem;
+      display: flex; gap: 0.75rem;
+      justify-content: center; flex-wrap: wrap;
+      opacity: 0; transform: translateY(20px);
+    }
+
+    .pub-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.6rem 1.25rem; border-radius: 999px;
+      font-size: 0.9rem; font-weight: 600; text-decoration: none;
+      transition: all 0.3s ease;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      color: #fff; background: rgba(255,255,255,0.08);
+    }
+    .pub-btn:hover { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.5); transform: translateY(-2px); color: #fff; }
+    .pub-btn.disabled { opacity: 0.4; pointer-events: none; cursor: default; }
+
+    .scroll-hint {
+      position: absolute; bottom: 2.5rem; left: 50%;
+      transform: translateX(-50%);
+      text-align: center; color: #555; font-size: 0.85rem;
+      opacity: 0; animation: none;
+    }
+    .scroll-hint i { display: block; margin-top: 0.4rem; font-size: 1.2rem; }
+
+    @keyframes pulse-hint {
+      0%, 100% { opacity: 0.5; transform: translateX(-50%) translateY(0); }
+      50% { opacity: 1; transform: translateX(-50%) translateY(6px); }
+    }
+
+    .sec-hero.phase-0 .venue-badge { opacity: 1; transform: translateY(0); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+    .sec-hero.phase-0 .publication-title { opacity: 1; transform: translateY(0); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s; }
+    .sec-hero.phase-0 .publication-authors { opacity: 1; transform: translateY(0); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s; }
+    .sec-hero.phase-0 .publication-links { opacity: 1; transform: translateY(0); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s; }
+    .sec-hero.phase-0 .scroll-hint { animation: pulse-hint 2s ease-in-out infinite 1.2s; }
+
+    /* Content */
+    .sec-content {
+      background: #eeeeee;
+      color: #333;
+      flex-direction: column;
+      padding: 4rem 2rem;
+    }
+    .sec-content .section-inner {
+      max-width: 960px;
+      width: 100%;
+      overflow-y: auto;
+      max-height: 90vh;
+      padding-right: 0.5rem;
+      scrollbar-width: none;
+    }
+    .sec-content .section-inner::-webkit-scrollbar { display: none; }
+
+    .section-title {
+      font-size: 2rem; font-weight: 700;
+      margin-bottom: 1.5rem; text-align: center; color: #111;
+      opacity: 0; transform: translateY(40px);
+      transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .section-text {
+      font-size: 1.05rem; line-height: 1.8; color: #555; margin-bottom: 2rem;
+      opacity: 0; transform: translateY(30px);
+      transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.12s;
+    }
+    .section-text b { color: #222; }
+    .section-text ul { margin-top: 0.75rem; margin-left: 1.25rem; }
+    .section-text li { margin-bottom: 0.5rem; }
+
+    .figure-container {
+      text-align: center;
+      opacity: 0; transform: translateY(40px);
+      transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s;
+    }
+    .figure-container img { width: 100%; height: auto; border-radius: 12px; }
+    .figure-caption { color: #999; font-size: 0.9rem; margin-top: 0.75rem; text-align: center; }
+
+    .sec-content.phase-0 .section-title { opacity: 1; transform: translateY(0); }
+    .sec-content.phase-0 .section-text { opacity: 1; transform: translateY(0); }
+    .sec-content.phase-0 .figure-container { opacity: 1; transform: translateY(0); }
+
+    .sec-content pre {
+      background: #f5f5f5 !important;
+      border-radius: 8px !important;
+      padding: 1.25rem !important;
+      font-size: 0.85rem !important;
+      color: #333; overflow-x: auto;
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
+    }
+    .sec-content.phase-0 pre { opacity: 1; transform: translateY(0); }
+
+    .site-footer {
+      margin-top: 2rem; padding-top: 1.5rem;
+      border-top: 1px solid #ddd; text-align: center;
+      opacity: 0; transition: all 0.6s ease 0.3s;
+    }
+    .site-footer p { color: #999; font-size: 0.85rem; }
+    .site-footer a { color: #3274D8; }
+    .sec-content.phase-0 .site-footer { opacity: 1; }
+
+    @media screen and (max-width: 768px) {
+      .sec-hero .publication-title { font-size: 1.6rem; }
+      .sec-content { padding: 2.5rem 1.25rem; }
+      .section-title { font-size: 1.5rem; }
+      #page-nav { right: 0.75rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav id="page-nav"></nav>
+
+  <div id="fullpage">
+
+    <!-- Hero -->
+    <section class="fp-section sec-hero" data-bg="dark">
+      <div class="venue-badge">CVPR 2026</div>
+      <h1 class="publication-title">
+        <span class="t-red">Reflection Separation</span>
+        <span class="t-main"> from a Single Image<br>via </span>
+        <span class="t-blue">Joint Latent Diffusion</span>
+      </h1>
+      <div class="publication-authors">
+        <span class="author-block">Zheng-Hui Huang<sup>&nbsp;1,2</sup></span>,
+        <span class="author-block">Zhixiang Wang<sup>&nbsp;1,*</sup></span>,
+        <span class="author-block">Yu-Lun Liu<sup>&nbsp;3,*</sup></span>,
+        <span class="author-block">Yung-Yu Chuang<sup>&nbsp;2</sup></span>
+        <div class="affiliations">
+          <sup>1</sup>Shanda AI Research Tokyo &nbsp;&nbsp;
+          <sup>2</sup>National Taiwan University &nbsp;&nbsp;
+          <sup>3</sup>National Yang Ming Chiao Tung University
+        </div>
+      </div>
+      <div class="publication-links">
+        <a href="#" class="pub-btn">
+          <i class="ai ai-arxiv"></i> Paper
+        </a>
+        <a href="https://github.com/Brian90709/diff-reflection-separation" target="_blank" class="pub-btn">
+          <i class="fab fa-github"></i> Code
+        </a>
+      </div>
+      <div class="scroll-hint">
+        Scroll to explore
+        <i class="fas fa-chevron-down"></i>
+      </div>
+    </section>
+
+    <!-- Abstract -->
+    <section class="fp-section sec-content" data-bg="light">
+      <div class="section-inner">
+        <h2 class="section-title">Abstract</h2>
+        <div class="section-text">
+          <p>Single-image reflection separation remains challenging due to its ill-posed nature, especially under extreme conditions with strong or subtle reflections. Existing methods often struggle to recover both layers in glare or weak-reflection scenarios because of insufficient information.</p>
+          <p>This paper presents the <b>first diffusion model explicitly fine-tuned for this task</b>, leveraging generative diffusion priors for robust separation. Our method simultaneously generates transmission and reflection layers through a unified diffusion model, incorporating a novel <b>cross-layer self-attention</b> mechanism for better feature disentanglement. We further introduce a <b>disjoint sampling strategy</b> to iteratively reduce interference between the layers during diffusion and a <b>latent optimization</b> step with a learned composition function for improved results in complex real-world scenarios.</p>
+          <p>Extensive experiments show our approach achieves superior separation performance on multiple real-world benchmarks and surpasses state-of-the-art methods in both quantitative metrics and perceptual quality.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Method -->
+    <section class="fp-section sec-content" data-bg="light">
+      <div class="section-inner">
+        <h2 class="section-title">Method</h2>
+        <div class="section-text">
+          <p>Given an input image containing reflections, we encode it into a latent representation and leverage a fine-tuned diffusion model guided by distinct prompts (<b>"Transmission"</b> and <b>"Reflection"</b>) to jointly separate both layers. Our framework consists of the following key components:</p>
+          <ul>
+            <li><b>Cross-Layer Self-Attention</b> &mdash; Queries from each layer attend to keys from both layers, enabling effective information exchange and clearer feature disentanglement.</li>
+            <li><b>Disjoint Sampling</b> &mdash; Predicted noise differences between layers serve as mutual negative guidance, iteratively pushing transmission and reflection trajectories apart.</li>
+            <li><b>Fidelity-Guided Feature Modulation (FGFM)</b> &mdash; Multi-scale features from the original mixture image counteract color drifts introduced by disjoint sampling.</li>
+            <li><b>Latent Optimization</b> &mdash; A learned composition function with test-time optimization refines latent representations, improving separation fidelity while reducing computational cost.</li>
+          </ul>
+        </div>
+        <!-- Placeholder for framework figure -->
+        <!-- <div class="figure-container">
+          <img src="static/images/framework.png" alt="Framework overview">
+          <p class="figure-caption">Overview of our framework.</p>
+        </div> -->
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section class="fp-section sec-content" data-bg="light">
+      <div class="section-inner">
+        <h2 class="section-title">Results</h2>
+        <div class="section-text">
+          <p>Our method achieves <b>state-of-the-art performance</b> on multiple real-world benchmarks, including Real20, Nature, and SIR<sup>2</sup> datasets. Key highlights:</p>
+          <ul>
+            <li>Effectively handles <b>strong reflections</b> by hallucinating missing details in the transmission layer.</li>
+            <li>Accurately extracts <b>subtle and weak reflections</b> that previous methods fail to capture.</li>
+            <li>Achieves superior results in both <b>quantitative metrics</b> (PSNR, SSIM, LPIPS, DISTS) and <b>perceptual quality</b>.</li>
+            <li>First method to demonstrate strong <b>reflection layer recovery</b>, not just transmission layer improvement.</li>
+          </ul>
+        </div>
+        <!-- Placeholder for result figures -->
+        <!-- <div class="figure-container">
+          <img src="static/images/comparison.png" alt="Qualitative comparison">
+          <p class="figure-caption">Qualitative comparison with state-of-the-art methods.</p>
+        </div> -->
+      </div>
+    </section>
+
+    <!-- BibTeX -->
+    <section class="fp-section sec-content" data-bg="light" style="min-height: auto; height: auto;">
+      <div class="section-inner">
+        <h2 class="section-title">BibTeX</h2>
+        <pre><code>@inproceedings{huang2026reflection,
+  title={Reflection Separation from a Single Image via Joint Latent Diffusion},
+  author={Huang, Zheng-Hui and Wang, Zhixiang and Liu, Yu-Lun and Chuang, Yung-Yu},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and
+             Pattern Recognition (CVPR)},
+  year={2026}
+}</code></pre>
+        <footer class="site-footer">
+          <p>This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>.</p>
+        </footer>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+  (function() {
+    var container = document.getElementById('fullpage');
+    var sections  = document.querySelectorAll('.fp-section');
+    var total     = sections.length;
+    var current   = 0;
+    var isAnimating = false;
+    var LOCK_MS   = 800;
+
+    /* Build nav dots */
+    var nav = document.getElementById('page-nav');
+    for (var i = 0; i < total; i++) {
+      var dot = document.createElement('button');
+      dot.className = 'nav-dot';
+      dot.setAttribute('data-index', i);
+      dot.addEventListener('click', function() {
+        goTo(parseInt(this.getAttribute('data-index')));
+      });
+      nav.appendChild(dot);
+    }
+    var dots = nav.querySelectorAll('.nav-dot');
+
+    function updateDots() {
+      for (var i = 0; i < dots.length; i++) {
+        dots[i].classList.remove('active', 'dark');
+        if (i === current) dots[i].classList.add('active');
+        if (sections[current].getAttribute('data-bg') === 'light') dots[i].classList.add('dark');
+      }
+    }
+
+    function activateSection(index) {
+      sections[index].classList.add('phase-0');
+      var inner = sections[index].querySelector('.section-inner');
+      if (inner) inner.scrollTop = 0;
+    }
+
+    function deactivateSection(index) {
+      sections[index].classList.remove('phase-0');
+    }
+
+    function goTo(index) {
+      if (index < 0 || index >= total || index === current || isAnimating) return;
+      isAnimating = true;
+      deactivateSection(current);
+      current = index;
+      container.style.transform = 'translateY(' + (-current * 100) + 'vh)';
+      updateDots();
+      setTimeout(function() { activateSection(current); }, 300);
+      setTimeout(function() { isAnimating = false; }, LOCK_MS);
+    }
+
+    function canScrollInner(section, direction) {
+      var inner = section.querySelector('.section-inner');
+      if (!inner) return false;
+      var scrollable = inner.scrollHeight > inner.clientHeight + 2;
+      if (!scrollable) return false;
+      if (direction > 0) return inner.scrollTop + inner.clientHeight < inner.scrollHeight - 2;
+      else return inner.scrollTop > 2;
+    }
+
+    /* Wheel */
+    var wheelAcc = 0, wheelThreshold = 50, wheelTimer = null;
+    window.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      if (isAnimating) return;
+      var dir = e.deltaY > 0 ? 1 : -1;
+      if (canScrollInner(sections[current], dir)) {
+        sections[current].querySelector('.section-inner').scrollTop += e.deltaY;
+        return;
+      }
+      wheelAcc += Math.abs(e.deltaY);
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(function() { wheelAcc = 0; }, 200);
+      if (wheelAcc >= wheelThreshold) { wheelAcc = 0; goTo(current + dir); }
+    }, { passive: false });
+
+    /* Touch */
+    var touchStartY = 0, touchMoved = false;
+    window.addEventListener('touchstart', function(e) { touchStartY = e.touches[0].clientY; touchMoved = false; }, { passive: true });
+    window.addEventListener('touchmove', function(e) {
+      if (isAnimating) return;
+      var dy = touchStartY - e.touches[0].clientY, dir = dy > 0 ? 1 : -1;
+      if (canScrollInner(sections[current], dir)) return;
+      if (!touchMoved && Math.abs(dy) > 50) { touchMoved = true; goTo(current + dir); }
+    }, { passive: true });
+
+    /* Keyboard */
+    window.addEventListener('keydown', function(e) {
+      if (isAnimating) return;
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        if (canScrollInner(sections[current], 1)) sections[current].querySelector('.section-inner').scrollTop += 120;
+        else goTo(current + 1);
+      } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault();
+        if (canScrollInner(sections[current], -1)) sections[current].querySelector('.section-inner').scrollTop -= 120;
+        else goTo(current - 1);
+      }
+    });
+
+    updateDots();
+    setTimeout(function() { activateSection(0); }, 100);
+  })();
+  </script>
+
+</body>
+</html>
