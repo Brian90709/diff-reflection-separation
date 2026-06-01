@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice">
+  <rect width="600" height="400" fill="#e9e9e9"/>
+  <g fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" text-anchor="middle">
+    <text x="300" y="195" font-size="56" font-weight="700">N / A</text>
+    <text x="300" y="240" font-size="22">No GT reflection for this scene</text>
+  </g>
+</svg>

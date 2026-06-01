@@ -1,0 +1,6 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Back layer: reflection (blue) -->
+  <rect x="2" y="14" width="44" height="48" rx="6" fill="#2980b9"/>
+  <!-- Front layer: transmission (red), offset up-right -->
+  <rect x="18" y="2" width="44" height="48" rx="6" fill="#e74c3c"/>
+</svg>

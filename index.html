@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta property="og:title" content="Reflection Separation from a Single Image via Joint Latent Diffusion" />
+  <meta property="og:description" content="CVPR 2026 - Joint latent diffusion for single-image reflection separation" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Reflection Separation from a Single Image via Joint Latent Diffusion</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=2">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { font-size: 18px; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-feature-settings: 'kern' 1, 'liga' 1, 'cv11' 1;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      background: #fafafa;
+      color: #3a3f44;
+      scroll-behavior: smooth;
+    }
+    @media (max-width: 640px) {
+      html { font-size: 17px; }
+    }
+    ::selection { background: #ffd2cc; color: #111; }
+
+    /* Hero */
+    .sec-hero {
+      background: #fafafa;
+      color: #222;
+      padding: 4rem 2rem 1.5rem;
+      text-align: center;
+    }
+    .sec-hero .hero-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .publication-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.022em;
+      color: #0f1419;
+      margin: 1.25rem 0 1.75rem;
+    }
+    @media (max-width: 640px) {
+      .publication-title { font-size: 1.75rem; }
+    }
+
+    .site-logo {
+      width: 1em;
+      height: 1em;
+      vertical-align: -0.18em;
+      margin-right: 0.35em;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .publication-title:hover .site-logo { transform: rotate(-8deg) scale(1.08); }
+
+    .venue-badge {
+      display: inline-block;
+      margin-top: 1.25rem;
+      padding: 0.25rem 0.9rem;
+      background: #fff;
+      border: 1px solid #e3e3e3;
+      border-radius: 999px;
+      color: #555;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .publication-authors {
+      max-width: 56rem;
+      margin: 0 auto;
+      font-size: 1.05rem;
+      color: #444;
+      font-weight: 500;
+    }
+    .author-block { display: inline-block; margin: 0 0.3rem; }
+    .author-block a {
+      color: #2563eb;
+      text-decoration: none;
+      border-bottom: 1px dashed transparent;
+      transition: color 0.2s ease, border-color 0.2s ease;
+    }
+    .author-block a:hover { color: #1d4ed8; border-bottom-color: #1d4ed8; }
+    .affiliations { margin-top: 0.55rem; font-size: 0.92rem; color: #777; }
+    .corresp-note { font-size: 0.8rem; color: #999; font-style: italic; }
+
+    .publication-links {
+      margin-top: 1.5rem;
+      display: flex; gap: 0.55rem;
+      justify-content: center; flex-wrap: wrap;
+    }
+
+    .pub-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.55rem 1.15rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: 1px solid #d8d8d8;
+      color: #1a1a1a; background: #fff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .pub-btn:hover {
+      background: #0f1419;
+      color: #fff;
+      border-color: #0f1419;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+    }
+    .pub-btn.disabled { opacity: 0.4; pointer-events: none; cursor: default; }
+
+    /* Content sections */
+    .sec-content {
+      background: #fafafa;
+      color: #333;
+      padding: 1.5rem 1.5rem;
+    }
+    .sec-content .section-inner {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.018em;
+      margin: 0 0 1.5rem;
+      text-align: center;
+      color: #0f1419;
+    }
+    .subsection-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin: 2.5rem 0 0.75rem;
+      text-align: center;
+      color: #0f1419;
+    }
+    .section-text {
+      font-size: 1.02rem;
+      line-height: 1.75;
+      color: #4a4a4a;
+      margin-bottom: 1.5rem;
+    }
+    .section-text:last-child { margin-bottom: 0; }
+    .section-text b { color: #0f1419; font-weight: 600; }
+    .section-text p { margin: 0 0 1.1rem; }
+    .section-text p:last-child { margin-bottom: 0; }
+    .abstract-text {
+      font-size: 0.95rem;
+      line-height: 1.75;
+      max-width: 780px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: justify;
+    }
+    .section-text ul { margin-top: 0.75rem; margin-left: 1.25rem; }
+    .section-text li { margin-bottom: 0.5rem; }
+
+    .figure-container {
+      text-align: center;
+      margin: 2rem 0 0;
+    }
+    .figure-container img { width: 100%; height: auto; border-radius: 12px; }
+    .figure-caption {
+      color: #888;
+      font-size: 0.88rem;
+      margin-top: 0.75rem;
+      text-align: center;
+      font-style: italic;
+    }
+
+    /* Architecture figure with clickable hotspot */
+    .arch-figure { position: relative; display: inline-block; max-width: 100%; }
+    .arch-figure img { display: block; }
+    .arch-hotspot {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: rgba(192, 57, 43, 0.85);
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.2s ease, transform 0.2s ease;
+      animation: hotspotPulse 2.4s ease-in-out infinite;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+    }
+    .arch-hotspot:hover {
+      background: rgba(192, 57, 43, 1);
+      transform: translate(-50%, -50%) scale(1.35);
+    }
+    @keyframes hotspotPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.6), 0 1px 3px rgba(0,0,0,0.35); }
+      50%      { box-shadow: 0 0 0 7px rgba(192, 57, 43, 0),  0 1px 3px rgba(0,0,0,0.35); }
+    }
+    .arch-figure.is-detail .arch-hotspot { display: none; }
+
+    /* Pseudocode-style algorithm panel (replaces image for Latent Optimization) */
+    .arch-algo {
+      display: none;
+      margin: 0;
+      padding: 1rem 1.1rem;
+      background: #fff;
+      border: 1px solid #e3e3e3;
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+      font-size: 0.78rem;
+      line-height: 1.6;
+      color: #333;
+      white-space: pre;
+      overflow-x: auto;
+      text-align: left;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .arch-algo .algo-title {
+      display: block;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.02em;
+    }
+    .arch-algo .algo-hilite { background: #ffeec8; padding: 0 2px; border-radius: 2px; }
+    .arch-algo .algo-note { color: #999; }
+    .arch-figure.is-algo .arch-img { visibility: hidden; position: absolute; height: 0; }
+    .arch-figure.is-algo .arch-algo { display: block; }
+
+    .method-hint {
+      text-align: center;
+      font-size: 1rem;
+      color: #555;
+      margin: -0.75rem 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .method-hint b { color: #c0392b; }
+    .method-hint .hint-dot {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: rgba(192, 57, 43, 0.85);
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      animation: hotspotPulse 2.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    /* Detail mode layout: smaller image + description side-by-side */
+    .arch-container.is-detail {
+      display: flex;
+      align-items: flex-start;
+      gap: 2rem;
+      flex-wrap: wrap;
+      text-align: left;
+    }
+    .arch-container.is-detail .arch-figure {
+      flex: 1 1 360px;
+      min-width: 0;
+      max-width: 560px;
+      align-self: flex-start;
+    }
+    .arch-container.is-detail .arch-caption { display: none; }
+    .arch-container:not(.is-detail) .arch-detail-text { display: none; }
+    .arch-detail-text {
+      flex: 1 1 320px;
+      min-width: 0;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #444;
+    }
+    .arch-detail-text h4 {
+      margin: 0 0 0.6rem;
+      font-size: 1.15rem; font-weight: 700; color: #111;
+    }
+    .arch-detail-text p { margin: 0 0 0.75rem; }
+    .arch-detail-text p:last-child { margin-bottom: 0; }
+    .arch-detail-text b { color: #222; }
+    @media (max-width: 720px) {
+      .arch-container.is-detail .arch-figure { max-width: 100%; flex-basis: 100%; }
+    }
+
+    .arch-back {
+      position: absolute;
+      right: 0.75rem; top: 0.75rem;
+      width: auto; height: auto;
+      padding: 0.4rem 0.85rem;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      color: #fff;
+      font-size: 0.8rem; font-weight: 600;
+      display: none;
+      align-items: center; gap: 0.4rem;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: background 0.2s ease, transform 0.2s ease;
+      font-family: inherit;
+    }
+    .arch-back:hover { background: rgba(0,0,0,0.85); transform: scale(1.05); }
+    .arch-figure.is-detail .arch-back { display: inline-flex; }
+
+    .arch-detail-label {
+      position: absolute;
+      left: 0.75rem; top: 0.75rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-size: 0.8rem; font-weight: 600;
+      display: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      pointer-events: none;
+    }
+    .arch-figure.is-detail .arch-detail-label { display: inline-block; }
+
+    /* Teaser comparison sliders */
+    .teaser-stack { max-width: 820px; margin: 0 auto; }
+
+    .example-selector {
+      display: flex; gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .ex-tab {
+      padding: 0.4rem 1rem;
+      border: 1px solid #d8d8d8;
+      background: #fff;
+      color: #555;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .ex-tab:hover { border-color: #0f1419; color: #0f1419; }
+    .ex-tab.active { background: #0f1419; color: #fff; border-color: #0f1419; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+
+    .comparison { display: none; }
+    .comparison.active { display: block; }
+
+    .quant-pane { display: none; }
+    .quant-pane.active { display: block; }
+
+    /* Visual Comparison controls */
+    .cmp-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      align-items: center;
+      margin: 0.6rem 0 1rem;
+    }
+    .cmp-row {
+      display: flex; align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .cmp-row-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #777;
+      letter-spacing: 0.02em;
+      margin-right: 0.15rem;
+    }
+
+    .comparison-toggle {
+      display: flex; gap: 0.4rem;
+      justify-content: center; margin-bottom: 0.55rem;
+    }
+    .comp-tab {
+      padding: 0.32rem 0.85rem;
+      border: 1px solid #d8d8d8;
+      background: #fff;
+      color: #555;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .comp-tab:hover { border-color: #0f1419; color: #0f1419; }
+    .comp-tab.active { background: #0f1419; color: #fff; border-color: #0f1419; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+
+    .comparison-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 2;
+      overflow: hidden;
+      border-radius: 10px;
+      user-select: none;
+      cursor: ew-resize;
+      background: #111;
+      --pos: 50%;
+      touch-action: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+    }
+    .comparison-frame img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+      -webkit-user-drag: none;
+    }
+    .comparison-frame img.comp-under-r { display: none; }
+    .comparison-frame[data-layer="R"] img.comp-under-t { display: none; }
+    .comparison-frame[data-layer="R"] img.comp-under-r { display: block; }
+
+    .comp-over { clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
+
+    .comp-handle {
+      position: absolute;
+      top: 0; bottom: 0;
+      left: var(--pos);
+      width: 2px;
+      background: rgba(255, 255, 255, 0.9);
+      transform: translateX(-50%);
+      pointer-events: none;
+      box-shadow: 0 0 6px rgba(0,0,0,0.4);
+    }
+    .comp-handle::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 34px; height: 34px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+    }
+    .comp-handle::after {
+      content: '\2039\00A0\203A';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px; font-weight: 700; color: #333;
+      letter-spacing: 2px;
+      font-family: -apple-system, system-ui, sans-serif;
+    }
+
+    .comp-label {
+      position: absolute;
+      bottom: 10px;
+      padding: 3px 10px;
+      background: rgba(15, 20, 25, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 999px;
+      pointer-events: none;
+      letter-spacing: 0.02em;
+    }
+    .comp-label-l { left: 10px; }
+    .comp-label-r { right: 10px; }
+
+    .teaser-caption {
+      color: #888; font-size: 0.9rem;
+      margin-top: 1.5rem; text-align: center;
+    }
+
+    .teaser-intro {
+      max-width: 720px;
+      margin: 0.75rem auto 0;
+      text-align: center;
+      color: #888;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      font-style: italic;
+    }
+    .teaser-intro p { margin: 0; }
+    .teaser-intro b { color: #555; font-style: normal; }
+    .teaser-intro i { font-style: normal; }
+
+    .sec-content pre {
+      background: #fff !important;
+      border: 1px solid #e3e3e3 !important;
+      border-radius: 10px !important;
+      padding: 1.25rem !important;
+      font-family: 'JetBrains Mono', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace !important;
+      font-size: 0.82rem !important;
+      line-height: 1.6 !important;
+      color: #333;
+      overflow-x: auto;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .site-footer {
+      margin-top: 3rem; padding: 1.5rem 1rem 2rem;
+      border-top: 1px solid #ddd; text-align: center;
+      background: #fafafa;
+    }
+    .site-footer p { color: #999; font-size: 0.85rem; margin: 0; }
+    .site-footer a { color: #3274D8; }
+
+    /* On-scroll fade-in (progressive enhancement) */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+    .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+    @media screen and (max-width: 768px) {
+      .publication-title { font-size: 1.6rem; }
+      .sec-hero { padding: 2.5rem 1.25rem 1.5rem; }
+      .sec-content { padding: 1.5rem 1.25rem; }
+      .section-title { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Hero -->
+  <section class="sec-hero">
+    <div class="hero-inner">
+      <h1 class="publication-title reveal">
+        <svg class="site-logo" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Back layer: reflection (blue) -->
+          <rect x="4" y="14" width="44" height="44" rx="8" fill="#2980b9"/>
+          <rect x="4" y="14" width="44" height="44" rx="8" fill="none" stroke="#1d6391" stroke-width="1.5"/>
+          <!-- Front layer: transmission (red), offset up-right -->
+          <rect x="16" y="4" width="44" height="44" rx="8" fill="#e74c3c"/>
+          <rect x="16" y="4" width="44" height="44" rx="8" fill="none" stroke="#a83025" stroke-width="1.5"/>
+          <!-- Glass-shine highlight -->
+          <path d="M 20 8 Q 24 10 24 14 L 24 24 Q 22 22 20 18 Z" fill="#fff" opacity="0.3"/>
+        </svg>
+        Reflection Separation from a Single Image<br>via Joint Latent Diffusion
+      </h1>
+      <div class="publication-authors reveal">
+        <span class="author-block"><a href="https://github.com/Brian90709" target="_blank" rel="noopener">Zheng-Hui Huang</a><sup>&nbsp;1,2</sup></span>,
+        <span class="author-block"><a href="https://lightchaserx.github.io" target="_blank" rel="noopener">Zhixiang Wang</a><sup>&nbsp;1*</sup></span>,
+        <span class="author-block"><a href="https://yulunalexliu.github.io" target="_blank" rel="noopener">Yu-Lun Liu</a><sup>&nbsp;3</sup></span>,
+        <span class="author-block"><a href="https://www.csie.ntu.edu.tw/~cyy/" target="_blank" rel="noopener">Yung-Yu Chuang</a><sup>&nbsp;2</sup></span>
+        <div class="affiliations">
+          <sup>1</sup>Shanda AI Research Tokyo &nbsp;&nbsp;
+          <sup>2</sup>National Taiwan University &nbsp;&nbsp;
+          <sup>3</sup>National Yang Ming Chiao Tung University
+          &nbsp;&nbsp;<span class="corresp-note">* Corresponding author</span>
+        </div>
+      </div>
+      <div class="venue-badge reveal">CVPR 2026</div>
+      <div class="publication-links reveal">
+        <a href="#" class="pub-btn">
+          <i class="ai ai-arxiv"></i> Paper
+        </a>
+        <a href="https://github.com/Brian90709/diff-reflection-separation-code" target="_blank" class="pub-btn">
+          <i class="fab fa-github"></i> Code
+        </a>
+        <a href="https://huggingface.co/Brian9999/diff-reflection-separation" target="_blank" class="pub-btn">
+          🤗 Models
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Teaser -->
+  <section class="sec-content">
+    <div class="section-inner">
+      <div class="teaser-stack reveal">
+
+        <div class="example-selector">
+          <button class="ex-tab active" data-index="0">Example 1</button>
+          <button class="ex-tab" data-index="1">Example 2</button>
+          <button class="ex-tab" data-index="2">Example 3</button>
+          <button class="ex-tab" data-index="3">Example 4</button>
+        </div>
+
+        <div class="comparison active" data-index="0">
+          <div class="comparison-toggle">
+            <button class="comp-tab active" data-layer="T">Transmission</button>
+            <button class="comp-tab" data-layer="R">Reflection</button>
+          </div>
+          <div class="comparison-frame" data-layer="T">
+            <img class="comp-under-t" src="assets/teaser/teaser3%20copy/teaser1_T.png?v=4" alt="Transmission">
+            <img class="comp-under-r" src="assets/teaser/teaser3%20copy/teaser1_R.png?v=4" alt="Reflection">
+            <img class="comp-over" src="assets/teaser/teaser3%20copy/teaser1.JPG?v=4" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Transmission</span>
+          </div>
+        </div>
+
+        <div class="comparison" data-index="1">
+          <div class="comparison-toggle">
+            <button class="comp-tab active" data-layer="T">Transmission</button>
+            <button class="comp-tab" data-layer="R">Reflection</button>
+          </div>
+          <div class="comparison-frame" data-layer="T">
+            <img class="comp-under-t" src="assets/teaser/teaser4/IMG_1917_ori_layer1.png" alt="Transmission">
+            <img class="comp-under-r" src="assets/teaser/teaser4/IMG_1917_layer2.png" alt="Reflection">
+            <img class="comp-over" src="assets/teaser/teaser4/IMG_1917.JPG" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Transmission</span>
+          </div>
+        </div>
+
+        <div class="comparison" data-index="2">
+          <div class="comparison-toggle">
+            <button class="comp-tab active" data-layer="T">Transmission</button>
+            <button class="comp-tab" data-layer="R">Reflection</button>
+          </div>
+          <div class="comparison-frame" data-layer="T">
+            <img class="comp-under-t" src="assets/teaser/teaser5/00028_Input_ori_layer1.png" alt="Transmission">
+            <img class="comp-under-r" src="assets/teaser/teaser5/00028_Input_layer2.png" alt="Reflection">
+            <img class="comp-over" src="assets/teaser/teaser5/00028_Input.png" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Transmission</span>
+          </div>
+        </div>
+
+        <div class="comparison" data-index="3">
+          <div class="comparison-toggle">
+            <button class="comp-tab active" data-layer="T">Transmission</button>
+            <button class="comp-tab" data-layer="R">Reflection</button>
+          </div>
+          <div class="comparison-frame" data-layer="T">
+            <img class="comp-under-t" src="assets/teaser/teaser6/LINE_ALBUM_202533_250303_7_ori_layer1.png" alt="Transmission">
+            <img class="comp-under-r" src="assets/teaser/teaser6/LINE_ALBUM_202533_250303_7_layer2.png" alt="Reflection">
+            <img class="comp-over" src="assets/teaser/teaser6/LINE_ALBUM_202533_250303_7.jpg" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Transmission</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="teaser-intro reveal">
+        <p>Motivation: Photos shot through glass mix the intended scene with an unwanted reflection &mdash; a severely <i>ill-posed</i> single-image problem. We harness diffusion priors to <i>jointly</i> recover both layers; the four examples above were captured in the wild.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Abstract -->
+  <section class="sec-content">
+    <div class="section-inner">
+      <h2 class="section-title reveal">Abstract</h2>
+      <div class="section-text abstract-text reveal">
+        <p>Single-image reflection separation remains challenging due to its ill-posed nature, especially under extreme conditions with strong or subtle reflections. Existing methods often struggle to recover both layers in glare or weak-reflection scenarios because of insufficient information.</p>
+        <p>This paper presents the <b>first diffusion model explicitly fine-tuned for this task</b>, leveraging generative diffusion priors for robust separation. Our method simultaneously generates transmission and reflection layers through a unified diffusion model, incorporating a novel <b>cross-layer self-attention</b> mechanism for better feature disentanglement. We further introduce a <b>disjoint sampling strategy</b> to iteratively reduce interference between the layers during diffusion and a <b>latent optimization</b> step with a learned composition function for improved results in complex real-world scenarios.</p>
+        <p>Extensive experiments show our approach achieves superior separation performance on multiple real-world benchmarks and surpasses state-of-the-art methods in both quantitative metrics and perceptual quality.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Method -->
+  <section class="sec-content">
+    <div class="section-inner">
+      <h2 class="section-title reveal">Method</h2>
+      <p class="method-hint reveal">
+        <span class="hint-dot"></span>
+        Click any <b>red dot</b> on the figure for component details.
+      </p>
+      <div class="figure-container arch-container reveal" style="margin: 0 0 2rem;">
+        <div class="arch-figure">
+          <img class="arch-img" src="assets/architecture_v3.png" alt="Framework overview">
+
+          <button class="arch-hotspot" type="button"
+                  data-target="assets/attention.png"
+                  data-label="Cross-Layer Self-Attention"
+                  aria-label="Show cross-layer self-attention detail"
+                  style="left: 49%; top: 43%;">
+          </button>
+          <button class="arch-hotspot" type="button"
+                  data-target="assets/disjoint_sampling.png"
+                  data-label="Disjoint Sampling"
+                  aria-label="Show disjoint sampling detail"
+                  style="left: 57%; top: 36%;">
+          </button>
+          <button class="arch-hotspot" type="button"
+                  data-target="assets/Fidelity-guided.png"
+                  data-label="Fidelity-Guided Feature Modulation"
+                  aria-label="Show fidelity-guided feature modulation detail"
+                  style="left: 78%; top: 5%;">
+          </button>
+          <button class="arch-hotspot" type="button"
+                  data-target="algo"
+                  data-label="Latent Optimization"
+                  aria-label="Show latent optimization detail"
+                  style="left: 78%; top: 62%;">
+          </button>
+
+          <pre class="arch-algo"><span class="algo-title">Algorithm 1 — Latent Optimization (per t mod 5)</span>
+<span class="algo-note">for t = N, ... , 1 do</span>
+  ε<sup>T</sup> ← ε<sub>θ</sub>(z<sub>I</sub>, z<sup>T</sup>, t, c<sup>T</sup>)
+  ε<sup>R</sup> ← ε<sub>θ</sub>(z<sub>I</sub>, z<sup>R</sup>, t, c<sup>R</sup>)
+
+  <span class="algo-hilite">if t mod 5 == 0 then              ◄ every 5 steps</span>
+<span class="algo-hilite">    for k = 1, ... , 4 do          ◄ 4 inner steps</span>
+<span class="algo-hilite">      ẑ₀<sup>T</sup> ← Tweedie(z<sup>T</sup>, ε<sup>T</sup>, α̅<sub>t</sub>)</span>
+<span class="algo-hilite">      ẑ₀<sup>R</sup> ← Tweedie(z<sup>R</sup>, ε<sup>R</sup>, α̅<sub>t</sub>)</span>
+<span class="algo-hilite">      ℒ ← ‖z<sub>I</sub> &minus; <b>C</b>(ẑ₀<sup>T</sup>, ẑ₀<sup>R</sup>)‖²   ◄ composition loss</span>
+<span class="algo-hilite">      z<sup>T</sup> ← z<sup>T</sup> &minus; γ &middot; ∇<sub>z<sup>T</sup></sub> ℒ</span>
+<span class="algo-hilite">      z<sup>R</sup> ← z<sup>R</sup> &minus; γ &middot; ∇<sub>z<sup>R</sup></sub> ℒ      ◄ gradient descent</span>
+<span class="algo-hilite">    end for</span>
+<span class="algo-hilite">  end if</span>
+
+  ε̂<sup>T</sup> ← ε<sup>T</sup> + w(ε<sup>T</sup> &minus; ε<sup>R</sup>)
+  ε̂<sup>R</sup> ← ε<sup>R</sup> + w(ε<sup>R</sup> &minus; ε<sup>T</sup>)
+  z<sup>T</sup>, z<sup>R</sup> ← DDIM_step(...)
+<span class="algo-note">end for</span></pre>
+
+          <span class="arch-detail-label"></span>
+          <button class="arch-back" type="button" aria-label="Back to architecture overview">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+        </div>
+        <div class="arch-detail-text">
+          <h4 class="detail-h"></h4>
+          <div class="detail-body"></div>
+        </div>
+
+        <p class="figure-caption arch-caption">Overview of our framework: a unified diffusion model jointly generates the transmission and reflection latents via cross-layer self-attention, disjoint sampling, fidelity-guided feature modulation, and a learned latent composition function.</p>
+      </div>
+      <!--
+      <div class="section-text reveal">
+        <p>Given an input image containing reflections, we encode it into a latent representation and leverage a fine-tuned diffusion model guided by distinct prompts (<b>"Transmission"</b> and <b>"Reflection"</b>) to jointly separate both layers. Our framework consists of the following key components:</p>
+        <ul>
+          <li><b>Cross-Layer Self-Attention</b> &mdash; Queries from each layer attend to keys from both layers, enabling effective information exchange and clearer feature disentanglement.</li>
+          <li><b>Disjoint Sampling</b> &mdash; Predicted noise differences between layers serve as mutual negative guidance, iteratively pushing transmission and reflection trajectories apart.</li>
+          <li><b>Fidelity-Guided Feature Modulation (FGFM)</b> &mdash; Multi-scale features from the original mixture image counteract color drifts introduced by disjoint sampling.</li>
+          <li><b>Latent Optimization</b> &mdash; A learned composition function with test-time optimization refines latent representations, improving separation fidelity while reducing computational cost.</li>
+        </ul>
+      </div>
+      -->
+
+    </div>
+  </section>
+
+  <!-- Visual & Quantitative Results -->
+  <section class="sec-content">
+    <div class="section-inner">
+
+      <h2 class="section-title reveal">Visual Comparison</h2>
+
+      <div class="teaser-stack reveal" id="comparison-stack" style="margin-top: 1rem;">
+
+        <div class="example-selector">
+          <button class="ex-tab active" data-index="0">1</button>
+          <button class="ex-tab" data-index="1">2</button>
+          <button class="ex-tab" data-index="2">3</button>
+          <button class="ex-tab" data-index="3">4</button>
+          <button class="ex-tab" data-index="4">5</button>
+          <button class="ex-tab" data-index="5">6</button>
+          <button class="ex-tab" data-index="6">7</button>
+          <button class="ex-tab" data-index="7">8</button>
+          <button class="ex-tab" data-index="8">9</button>
+          <button class="ex-tab" data-index="9">10</button>
+        </div>
+
+        <div class="cmp-controls">
+          <div class="cmp-row">
+            <span class="cmp-row-label">Compare with:</span>
+            <button class="comp-tab method-tab active" data-method="input">Input</button>
+            <button class="comp-tab method-tab" data-method="gt">GT</button>
+            <button class="comp-tab method-tab" data-method="dsit">DSIT</button>
+            <button class="comp-tab method-tab" data-method="dsrnet">DSRNet</button>
+            <button class="comp-tab method-tab" data-method="rdnet">RDNet</button>
+            <button class="comp-tab method-tab" data-method="ytmt">YTMT</button>
+          </div>
+          <div class="cmp-row">
+            <span class="cmp-row-label">Layer:</span>
+            <button class="comp-tab layer-tab active" data-layer="T">Transmission</button>
+            <button class="comp-tab layer-tab" data-layer="R">Reflection</button>
+          </div>
+        </div>
+
+        <div class="comparison active" data-index="0">
+          <div class="comparison-frame" data-layer="T" data-method="input"
+               data-input="Figures/input/WildSceneDataset_014_I.jpg"
+               data-gt-t="Figures/GT/WildSceneDataset_014_T.jpg"
+               data-gt-r="Figures/GT/WildSceneDataset_014_R.jpg"
+               data-dsit-t="Figures/DSIT/WildSceneDataset_014_T.jpg"
+               data-dsit-r="Figures/DSIT/WildSceneDataset_014_R.jpg"
+               data-dsrnet-t="Figures/DSRNet/WildSceneDataset_014_T.jpg"
+               data-dsrnet-r="Figures/DSRNet/WildSceneDataset_014_R.jpg"
+               data-rdnet-t="Figures/RDNet1/WildSceneDataset_014_T.jpg"
+               data-rdnet-r="Figures/RDNet1/WildSceneDataset_014_R.jpg"
+               data-ytmt-t="Figures/YTMT/WildSceneDataset_014_T.jpg"
+               data-ytmt-r="Figures/YTMT/WildSceneDataset_014_R.jpg"
+               data-ours-t="Figures/Ours_CFW75/WildSceneDataset_014_T.jpg"
+               data-ours-r="Figures/Ours_CFW75/WildSceneDataset_014_R.jpg">
+            <img class="comp-under-t" src="Figures/Ours_CFW75/WildSceneDataset_014_T.jpg" alt="Ours">
+            <img class="comp-under-r" src="Figures/Ours_CFW75/WildSceneDataset_014_R.jpg" alt="Ours">
+            <img class="comp-over" src="Figures/input/WildSceneDataset_014_I.jpg" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Ours</span>
+          </div>
+        </div>
+
+        <div class="comparison" data-index="1">
+          <div class="comparison-frame" data-layer="T" data-method="input"
+               data-input="Figures/input/real20_420_23_I.jpg"
+               data-gt-t="Figures/GT/real20_420_23_T.jpg"
+               data-dsit-t="Figures/DSIT/real20_420_23_T.jpg"
+               data-dsit-r="Figures/DSIT/real20_420_23_R.jpg"
+               data-dsrnet-t="Figures/DSRNet/real20_420_23_T.jpg"
+               data-dsrnet-r="Figures/DSRNet/real20_420_23_R.jpg"
+               data-rdnet-t="Figures/RDNet1/real20_420_23_T.jpg"
+               data-rdnet-r="Figures/RDNet1/real20_420_23_R.jpg"
+               data-ytmt-t="Figures/YTMT/real20_420_23_T.jpg"
+               data-ytmt-r="Figures/YTMT/real20_420_23_R.jpg"
+               data-ours-t="Figures/Ours_CFW75/real20_420_23_T.jpg"
+               data-ours-r="Figures/Ours_CFW75/real20_420_23_R.jpg">
+            <img class="comp-under-t" src="Figures/Ours_CFW75/real20_420_23_T.jpg" alt="Ours">
+            <img class="comp-under-r" src="Figures/Ours_CFW75/real20_420_23_R.jpg" alt="Ours">
+            <img class="comp-over" src="Figures/input/real20_420_23_I.jpg" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Ours</span>
+          </div>
+        </div>
+
+        <div class="comparison" data-index="2">
+          <div class="comparison-frame" data-layer="T" data-method="input"
+               data-input="Figures/input/Nature_1-2_31_I.jpg"
+               data-gt-t="Figures/GT/Nature_1-2_31_T.jpg"
+               data-dsit-t="Figures/DSIT/Nature_1-2_31_T.jpg"
+               data-dsit-r="Figures/DSIT/Nature_1-2_31_R.jpg"
+               data-dsrnet-t="Figures/DSRNet/Nature_1-2_31_T.jpg"
+               data-dsrnet-r="Figures/DSRNet/Nature_1-2_31_R.jpg"
+               data-rdnet-t="Figures/RDNet1/Nature_1-2_31_T.jpg"
+               data-rdnet-r="Figures/RDNet1/Nature_1-2_31_R.jpg"
+               data-ytmt-t="Figures/YTMT/Nature_1-2_31_T.jpg"
+               data-ytmt-r="Figures/YTMT/Nature_1-2_31_R.jpg"
+               data-ours-t="Figures/Ours_CFW75/Nature_1-2_31_T.jpg"
+               data-ours-r="Figures/Ours_CFW75/Nature_1-2_31_R.jpg">
+            <img class="comp-under-t" src="Figures/Ours_CFW75/Nature_1-2_31_T.jpg" alt="Ours">
+            <img class="comp-under-r" src="Figures/Ours_CFW75/Nature_1-2_31_R.jpg" alt="Ours">
+            <img class="comp-over" src="Figures/input/Nature_1-2_31_I.jpg" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Ours</span>
+          </div>
+        </div>
+
+        <div class="comparison" data-index="3">
+          <div class="comparison-frame" data-layer="T" data-method="input"
+               data-input="Figures/input/Nature_3_119_I.jpg"
+               data-gt-t="Figures/GT/Nature_3_119_T.jpg"
+               data-dsit-t="Figures/DSIT/Nature_3_119_T.jpg"
+               data-dsit-r="Figures/DSIT/Nature_3_119_R.jpg"
+               data-dsrnet-t="Figures/DSRNet/Nature_3_119_T.jpg"
+               data-dsrnet-r="Figures/DSRNet/Nature_3_119_R.jpg"
+               data-rdnet-t="Figures/RDNet1/Nature_3_119_T.jpg"
+               data-rdnet-r="Figures/RDNet1/Nature_3_119_R.jpg"
+               data-ytmt-t="Figures/YTMT/Nature_3_119_T.jpg"
+               data-ytmt-r="Figures/YTMT/Nature_3_119_R.jpg"
+               data-ours-t="Figures/Ours_CFW75/Nature_3_119_T.jpg"
+               data-ours-r="Figures/Ours_CFW75/Nature_3_119_R.jpg">
+            <img class="comp-under-t" src="Figures/Ours_CFW75/Nature_3_119_T.jpg" alt="Ours">
+            <img class="comp-under-r" src="Figures/Ours_CFW75/Nature_3_119_R.jpg" alt="Ours">
+            <img class="comp-over" src="Figures/input/Nature_3_119_I.jpg" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Ours</span>
+          </div>
+        </div>
+
+        <div class="comparison" data-index="4">
+          <div class="comparison-frame" data-layer="T" data-method="input"
+               data-input="Figures/input/Nature_3_49_I.jpg"
+               data-gt-t="Figures/GT/Nature_3_49_T.jpg"
+               data-dsit-t="Figures/DSIT/Nature_3_49_T.jpg"
+               data-dsit-r="Figures/DSIT/Nature_3_49_R.jpg"
+               data-dsrnet-t="Figures/DSRNet/Nature_3_49_T.jpg"
+               data-dsrnet-r="Figures/DSRNet/Nature_3_49_R.jpg"
+               data-rdnet-t="Figures/RDNet1/Nature_3_49_T.jpg"
+               data-rdnet-r="Figures/RDNet1/Nature_3_49_R.jpg"
+               data-ytmt-t="Figures/YTMT/Nature_3_49_T.jpg"
+               data-ytmt-r="Figures/YTMT/Nature_3_49_R.jpg"
+               data-ours-t="Figures/Ours_CFW75/Nature_3_49_T.jpg"
+               data-ours-r="Figures/Ours_CFW75/Nature_3_49_R.jpg">
+            <img class="comp-under-t" src="Figures/Ours_CFW75/Nature_3_49_T.jpg" alt="Ours">
+            <img class="comp-under-r" src="Figures/Ours_CFW75/Nature_3_49_R.jpg" alt="Ours">
+            <img class="comp-over" src="Figures/input/Nature_3_49_I.jpg" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Ours</span>
+          </div>
+        </div>
+
+        <div class="comparison" data-index="5">
+          <div class="comparison-frame" data-layer="T" data-method="input"
+               data-input="Figures/input/PostcardDataset_191_I.jpg"
+               data-gt-t="Figures/GT/PostcardDataset_191_T.jpg"
+               data-gt-r="Figures/GT/PostcardDataset_191_R.jpg"
+               data-dsit-t="Figures/DSIT/PostcardDataset_191_T.jpg"
+               data-dsit-r="Figures/DSIT/PostcardDataset_191_R.jpg"
+               data-dsrnet-t="Figures/DSRNet/PostcardDataset_191_T.jpg"
+               data-dsrnet-r="Figures/DSRNet/PostcardDataset_191_R.jpg"
+               data-rdnet-t="Figures/RDNet1/PostcardDataset_191_T.jpg"
+               data-rdnet-r="Figures/RDNet1/PostcardDataset_191_R.jpg"
+               data-ytmt-t="Figures/YTMT/PostcardDataset_191_T.jpg"
+               data-ytmt-r="Figures/YTMT/PostcardDataset_191_R.jpg"
+               data-ours-t="Figures/Ours_CFW75/PostcardDataset_191_T.jpg"
+               data-ours-r="Figures/Ours_CFW75/PostcardDataset_191_R.jpg">
+            <img class="comp-under-t" src="Figures/Ours_CFW75/PostcardDataset_191_T.jpg" alt="Ours">
+            <img class="comp-under-r" src="Figures/Ours_CFW75/PostcardDataset_191_R.jpg" alt="Ours">
+            <img class="comp-over" src="Figures/input/PostcardDataset_191_I.jpg" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Ours</span>
+          </div>
+        </div>
+
+        <div class="comparison" data-index="6">
+          <div class="comparison-frame" data-layer="T" data-method="input"
+               data-input="Figures/input/PostcardDataset_022_I.jpg"
+               data-gt-t="Figures/GT/PostcardDataset_022_T.jpg"
+               data-gt-r="Figures/GT/PostcardDataset_022_R.jpg"
+               data-dsit-t="Figures/DSIT/PostcardDataset_022_T.jpg"
+               data-dsit-r="Figures/DSIT/PostcardDataset_022_R.jpg"
+               data-dsrnet-t="Figures/DSRNet/PostcardDataset_022_T.jpg"
+               data-dsrnet-r="Figures/DSRNet/PostcardDataset_022_R.jpg"
+               data-rdnet-t="Figures/RDNet1/PostcardDataset_022_T.jpg"
+               data-rdnet-r="Figures/RDNet1/PostcardDataset_022_R.jpg"
+               data-ytmt-t="Figures/YTMT/PostcardDataset_022_T.jpg"
+               data-ytmt-r="Figures/YTMT/PostcardDataset_022_R.jpg"
+               data-ours-t="Figures/Ours_CFW75/PostcardDataset_022_T.jpg"
+               data-ours-r="Figures/Ours_CFW75/PostcardDataset_022_R.jpg">
+            <img class="comp-under-t" src="Figures/Ours_CFW75/PostcardDataset_022_T.jpg" alt="Ours">
+            <img class="comp-under-r" src="Figures/Ours_CFW75/PostcardDataset_022_R.jpg" alt="Ours">
+            <img class="comp-over" src="Figures/input/PostcardDataset_022_I.jpg" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Ours</span>
+          </div>
+        </div>
+
+        <div class="comparison" data-index="7">
+          <div class="comparison-frame" data-layer="T" data-method="input"
+               data-input="Figures/input/SolidObjectDataset_186_I.jpg"
+               data-gt-t="Figures/GT/SolidObjectDataset_186_T.jpg"
+               data-gt-r="Figures/GT/SolidObjectDataset_186_R.jpg"
+               data-dsit-t="Figures/DSIT/SolidObjectDataset_186_T.jpg"
+               data-dsit-r="Figures/DSIT/SolidObjectDataset_186_R.jpg"
+               data-dsrnet-t="Figures/DSRNet/SolidObjectDataset_186_T.jpg"
+               data-dsrnet-r="Figures/DSRNet/SolidObjectDataset_186_R.jpg"
+               data-rdnet-t="Figures/RDNet1/SolidObjectDataset_186_T.jpg"
+               data-rdnet-r="Figures/RDNet1/SolidObjectDataset_186_R.jpg"
+               data-ytmt-t="Figures/YTMT/SolidObjectDataset_186_T.jpg"
+               data-ytmt-r="Figures/YTMT/SolidObjectDataset_186_R.jpg"
+               data-ours-t="Figures/Ours_CFW75/SolidObjectDataset_186_T.jpg"
+               data-ours-r="Figures/Ours_CFW75/SolidObjectDataset_186_R.jpg">
+            <img class="comp-under-t" src="Figures/Ours_CFW75/SolidObjectDataset_186_T.jpg" alt="Ours">
+            <img class="comp-under-r" src="Figures/Ours_CFW75/SolidObjectDataset_186_R.jpg" alt="Ours">
+            <img class="comp-over" src="Figures/input/SolidObjectDataset_186_I.jpg" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Ours</span>
+          </div>
+        </div>
+
+        <div class="comparison" data-index="8">
+          <div class="comparison-frame" data-layer="T" data-method="input"
+               data-input="Figures/input/WildSceneDataset_039_I.jpg"
+               data-gt-t="Figures/GT/WildSceneDataset_039_T.jpg"
+               data-gt-r="Figures/GT/WildSceneDataset_039_R.jpg"
+               data-dsit-t="Figures/DSIT/WildSceneDataset_039_T.jpg"
+               data-dsit-r="Figures/DSIT/WildSceneDataset_039_R.jpg"
+               data-dsrnet-t="Figures/DSRNet/WildSceneDataset_039_T.jpg"
+               data-dsrnet-r="Figures/DSRNet/WildSceneDataset_039_R.jpg"
+               data-rdnet-t="Figures/RDNet1/WildSceneDataset_039_T.jpg"
+               data-rdnet-r="Figures/RDNet1/WildSceneDataset_039_R.jpg"
+               data-ytmt-t="Figures/YTMT/WildSceneDataset_039_T.jpg"
+               data-ytmt-r="Figures/YTMT/WildSceneDataset_039_R.jpg"
+               data-ours-t="Figures/Ours_CFW75/WildSceneDataset_039_T.jpg"
+               data-ours-r="Figures/Ours_CFW75/WildSceneDataset_039_R.jpg">
+            <img class="comp-under-t" src="Figures/Ours_CFW75/WildSceneDataset_039_T.jpg" alt="Ours">
+            <img class="comp-under-r" src="Figures/Ours_CFW75/WildSceneDataset_039_R.jpg" alt="Ours">
+            <img class="comp-over" src="Figures/input/WildSceneDataset_039_I.jpg" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Ours</span>
+          </div>
+        </div>
+
+        <div class="comparison" data-index="9">
+          <div class="comparison-frame" data-layer="T" data-method="input"
+               data-input="Figures/input/WildSceneDataset_033_I.jpg"
+               data-gt-t="Figures/GT/WildSceneDataset_033_T.jpg"
+               data-gt-r="Figures/GT/WildSceneDataset_033_R.jpg"
+               data-dsit-t="Figures/DSIT/WildSceneDataset_033_T.jpg"
+               data-dsit-r="Figures/DSIT/WildSceneDataset_033_R.jpg"
+               data-dsrnet-t="Figures/DSRNet/WildSceneDataset_033_T.jpg"
+               data-dsrnet-r="Figures/DSRNet/WildSceneDataset_033_R.jpg"
+               data-rdnet-t="Figures/RDNet1/WildSceneDataset_033_T.jpg"
+               data-rdnet-r="Figures/RDNet1/WildSceneDataset_033_R.jpg"
+               data-ytmt-t="Figures/YTMT/WildSceneDataset_033_T.jpg"
+               data-ytmt-r="Figures/YTMT/WildSceneDataset_033_R.jpg"
+               data-ours-t="Figures/Ours_CFW75/WildSceneDataset_033_T.jpg"
+               data-ours-r="Figures/Ours_CFW75/WildSceneDataset_033_R.jpg">
+            <img class="comp-under-t" src="Figures/Ours_CFW75/WildSceneDataset_033_T.jpg" alt="Ours">
+            <img class="comp-under-r" src="Figures/Ours_CFW75/WildSceneDataset_033_R.jpg" alt="Ours">
+            <img class="comp-over" src="Figures/input/WildSceneDataset_033_I.jpg" alt="Input">
+            <div class="comp-handle"></div>
+            <span class="comp-label comp-label-l">Input</span>
+            <span class="comp-label comp-label-r">Ours</span>
+          </div>
+        </div>
+
+      
+      </div>
+
+      <p class="figure-caption reveal" style="margin-top: 0.75rem;">Drag the slider to compare <b>Ours</b> (right) against the input mixture, ground truth, or state-of-the-art baselines (left). Use the <b>Compare with</b> row to switch the comparison target and <b>Layer</b> to view the transmission or reflection.</p>
+
+      <h2 class="section-title reveal" style="margin-top: 3rem;">Quantitative Comparison</h2>
+      <div class="quant-switch reveal">
+        <div class="comparison-toggle" style="margin: 1.25rem 0 0.75rem;">
+          <button class="comp-tab active" data-quant="T">Transmission</button>
+          <button class="comp-tab" data-quant="R">Reflection</button>
+        </div>
+
+        <div class="quant-pane active" data-quant="T">
+          <div class="figure-container">
+            <img src="assets/Quatitative/Quantitative_T.png" alt="Transmission quantitative results">
+          </div>
+        </div>
+
+        <div class="quant-pane" data-quant="R">
+          <div class="figure-container" style="margin: 0 auto; max-width: 440px;">
+            <img src="assets/Quatitative/Quantitative_R.png" alt="Reflection quantitative results">
+            <p class="figure-caption">Reflection-layer comparison on Real20.</p>
+          </div>
+        </div>
+      </div>
+      <p class="figure-caption reveal" style="margin-top: 0.75rem;">We compare against state-of-the-art baselines on three real-world benchmarks. The <span style="background:#f5c1ba; padding:0 4px; border-radius:3px;">best</span> and <span style="background:#fbe2c1; padding:0 4px; border-radius:3px;">second-best</span> results are highlighted; lower (&darr;) is better for LPIPS / DISTS, higher (&uarr;) is better for PSNR / SSIM.</p>
+
+    </div>
+  </section>
+
+  <!-- BibTeX -->
+  <section class="sec-content">
+    <div class="section-inner">
+      <h2 class="section-title reveal">BibTeX</h2>
+      <pre class="reveal"><code>@inproceedings{huang2026reflection,
+  title={Reflection Separation from a Single Image via Joint Latent Diffusion},
+  author={Huang, Zheng-Hui and Wang, Zhixiang and Liu, Yu-Lun and Chuang, Yung-Yu},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and
+             Pattern Recognition (CVPR)},
+  year={2026}
+}</code></pre>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <p>This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>.</p>
+  </footer>
+
+  <script>
+    // Progressive fade-in on scroll
+    (function() {
+      var els = document.querySelectorAll('.reveal');
+      if (!('IntersectionObserver' in window)) {
+        for (var i = 0; i < els.length; i++) els[i].classList.add('is-visible');
+        return;
+      }
+      var io = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      els.forEach(function(el) { io.observe(el); });
+    })();
+
+    // Architecture component hotspots: swap to detail image + description
+    (function() {
+      var container = document.querySelector('.arch-container');
+      if (!container) return;
+      var fig       = container.querySelector('.arch-figure');
+      var img       = fig.querySelector('.arch-img');
+      var hotspots  = fig.querySelectorAll('.arch-hotspot');
+      var backBtn   = fig.querySelector('.arch-back');
+      var labelTag  = fig.querySelector('.arch-detail-label');
+      var detailH   = container.querySelector('.detail-h');
+      var detailBody= container.querySelector('.detail-body');
+      var ARCH = 'assets/architecture_v3.png';
+
+      var DESCRIPTIONS = {
+        'Cross-Layer Self-Attention': [
+          '<p>Standard cross-attention computes attention only between latent queries and prompt-derived keys/values, so the transmission and reflection branches never directly exchange information.</p>',
+          '<p>Our <b>cross-layer self-attention</b> lets queries from each layer attend to the keys and values of <i>both</i> branches. This bidirectional exchange disentangles overlapping features and produces cleaner, more consistent transmission / reflection latents.</p>'
+        ].join(''),
+        'Disjoint Sampling': [
+          '<p>If we sample the two latents independently at each diffusion step, their predicted noises can land on overlapping regions of the data manifold (green band) — the two layers blend together.</p>',
+          '<p><b>Disjoint sampling</b> uses the difference between the two predicted noises, <span style="white-space:nowrap;">ε<sub>t</sub><sup>𝓡</sup>&minus;ε<sub>t</sub><sup>𝓣</sup></span>, as a mutual negative guidance, pushing each trajectory away from the other at every denoising step. The transmission and reflection manifolds stay separated, yielding cleaner layer recovery.</p>'
+        ].join(''),
+        'Fidelity-Guided Feature Modulation': [
+          '<p>Disjoint sampling can drift the color statistics of the recovered layers away from the input. <b>FGFM</b> counteracts this by injecting multi-scale features extracted from the original mixture image back into the denoiser with a learnable weight <i>w</i>.</p>',
+          '<p>The chart shows how <i>w</i> trades off fidelity to the input (low <i>w</i>) against separation strength (high <i>w</i>). Our adaptive weighting strikes the balance automatically.</p>'
+        ].join(''),
+        'Latent Optimization': [
+          '<p>To enforce the composition constraint <span style="white-space:nowrap;">z<sub>I</sub> ≈ C(ẑ₀<sup>T</sup>, ẑ₀<sup>R</sup>)</span> we run a short test-time optimization <i>in latent space</i>, summarised in Algorithm 1.</p>',
+          '<p>Every <b>5 diffusion steps</b>, we predict clean latent estimates <span style="white-space:nowrap;">ẑ₀<sup>T</sup>, ẑ₀<sup>R</sup></span> via Tweedie\'s formula and compute the composition loss <span style="white-space:nowrap;">ℒ = ‖z<sub>I</sub>&minus;C(ẑ₀<sup>T</sup>,ẑ₀<sup>R</sup>)‖²</span>. We then take <b>4 inner gradient-descent steps</b> on the noisy latents <span style="white-space:nowrap;">z<sup>T</sup>, z<sup>R</sup></span> to minimise this loss.</p>',
+          '<p>The learned composition function <b>C</b> makes the constraint differentiable in latent space, so the refinement is fast and memory-efficient — and beats pixel-space optimization on every metric (PSNR / SSIM / LPIPS / DISTS).</p>'
+        ].join('')
+      };
+
+      // Preload all detail images
+      hotspots.forEach(function(h) {
+        var tgt = h.getAttribute('data-target');
+        if (tgt && tgt !== 'algo') { var p = new Image(); p.src = tgt; }
+      });
+
+      hotspots.forEach(function(h) {
+        h.addEventListener('click', function() {
+          var label = h.getAttribute('data-label');
+          var tgt   = h.getAttribute('data-target');
+          labelTag.textContent = label;
+          detailH.textContent = label;
+          detailBody.innerHTML = DESCRIPTIONS[label] || '';
+          fig.classList.add('is-detail');
+          container.classList.add('is-detail');
+          if (tgt === 'algo') {
+            fig.classList.add('is-algo');
+          } else {
+            fig.classList.remove('is-algo');
+            img.src = tgt;
+          }
+        });
+      });
+
+      backBtn.addEventListener('click', function() {
+        img.src = ARCH;
+        fig.classList.remove('is-detail');
+        fig.classList.remove('is-algo');
+        container.classList.remove('is-detail');
+      });
+    })();
+
+    // Quantitative T/R switcher
+    (function() {
+      var sw = document.querySelector('.quant-switch');
+      if (!sw) return;
+      var tabs  = sw.querySelectorAll('.comp-tab');
+      var panes = sw.querySelectorAll('.quant-pane');
+      tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          var q = tab.getAttribute('data-quant');
+          tabs.forEach(function(t) { t.classList.remove('active'); });
+          tab.classList.add('active');
+          panes.forEach(function(p) {
+            p.classList.toggle('active', p.getAttribute('data-quant') === q);
+          });
+        });
+      });
+    })();
+
+    // Example selector (scoped per .teaser-stack)
+    (function() {
+      document.querySelectorAll('.teaser-stack').forEach(function(stack) {
+        var exTabs = stack.querySelectorAll('.ex-tab');
+        var comparisons = stack.querySelectorAll('.comparison');
+        exTabs.forEach(function(tab) {
+          tab.addEventListener('click', function() {
+            var idx = tab.getAttribute('data-index');
+            exTabs.forEach(function(t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            comparisons.forEach(function(c) {
+              c.classList.toggle('active', c.getAttribute('data-index') === idx);
+            });
+          });
+        });
+      });
+    })();
+
+    // Visual Comparison: shared method + layer toggles
+    (function() {
+      var stack = document.getElementById('comparison-stack');
+      if (!stack) return;
+      var methodTabs = stack.querySelectorAll('.method-tab');
+      var layerTabs  = stack.querySelectorAll('.layer-tab');
+
+      function apply() {
+        var mTab = stack.querySelector('.method-tab.active');
+        var lTab = stack.querySelector('.layer-tab.active');
+        if (!mTab || !lTab) return;
+        var method = mTab.getAttribute('data-method');
+        var layer  = lTab.getAttribute('data-layer');
+        var comp = stack.querySelector('.comparison.active');
+        if (!comp) return;
+        var frame  = comp.querySelector('.comparison-frame');
+        var over   = frame.querySelector('.comp-over');
+        var labelL = frame.querySelector('.comp-label-l');
+
+        frame.setAttribute('data-method', method);
+        frame.setAttribute('data-layer', layer);
+
+        var src;
+        if (method === 'input') {
+          src = frame.getAttribute('data-input');
+        } else {
+          src = frame.getAttribute('data-' + method + '-' + layer.toLowerCase());
+          // GT may lack reflection for some scenes → show placeholder
+          if (!src && method === 'gt' && layer === 'R') {
+            src = 'assets/no-gt.svg';
+          } else if (!src) {
+            src = frame.getAttribute('data-' + method + '-t'); // generic fallback
+          }
+        }
+        if (src) over.src = src;
+        labelL.textContent = mTab.textContent;
+      }
+
+      methodTabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          methodTabs.forEach(function(t) { t.classList.remove('active'); });
+          tab.classList.add('active');
+          apply();
+        });
+      });
+      layerTabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          layerTabs.forEach(function(t) { t.classList.remove('active'); });
+          tab.classList.add('active');
+          apply();
+        });
+      });
+      // Re-apply state when example changes (existing example-selector JS toggles .comparison.active first)
+      stack.querySelectorAll('.ex-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() { setTimeout(apply, 0); });
+      });
+    })();
+
+    // Image-comparison sliders
+    (function() {
+      document.querySelectorAll('.comparison').forEach(function(comp) {
+        var frame  = comp.querySelector('.comparison-frame');
+        var labelR = comp.querySelector('.comp-label-r');
+        var underT = frame.querySelector('.comp-under-t');
+        var underR = frame.querySelector('.comp-under-r');
+        var layerTabs = comp.querySelectorAll('.comp-tab[data-layer]');
+        var srcTabs   = comp.querySelectorAll('.src-tab');
+        var hasSource = srcTabs.length > 0;
+
+        function updateLabel() {
+          var layer  = frame.getAttribute('data-layer');
+          var source = frame.getAttribute('data-source');
+          var base = layer === 'T' ? 'Transmission' : 'Reflection';
+          labelR.textContent = hasSource && source
+            ? base + ' · ' + (source === 'ours' ? 'Ours' : 'GT')
+            : base;
+        }
+
+        // T/R toggle
+        layerTabs.forEach(function(tab) {
+          tab.addEventListener('click', function() {
+            layerTabs.forEach(function(t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            frame.setAttribute('data-layer', tab.getAttribute('data-layer'));
+            updateLabel();
+          });
+        });
+
+        // Ours / GT source toggle
+        srcTabs.forEach(function(tab) {
+          tab.addEventListener('click', function() {
+            srcTabs.forEach(function(t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            var source = tab.getAttribute('data-source');
+            frame.setAttribute('data-source', source);
+            var newT = frame.getAttribute('data-' + source + '-t');
+            var newR = frame.getAttribute('data-' + source + '-r');
+            if (newT) underT.src = newT;
+            if (newR) {
+              underR.src = newR;
+            } else if (source === 'gt') {
+              // GT for reflection layer not available for this scene: fall back to Ours R
+              underR.src = frame.getAttribute('data-ours-r');
+            }
+            updateLabel();
+          });
+        });
+
+        // Drag
+        var dragging = false;
+        function setPos(clientX) {
+          var rect = frame.getBoundingClientRect();
+          var pct = ((clientX - rect.left) / rect.width) * 100;
+          if (pct < 0) pct = 0;
+          if (pct > 100) pct = 100;
+          frame.style.setProperty('--pos', pct + '%');
+        }
+        function getX(e) {
+          if (e.touches && e.touches.length) return e.touches[0].clientX;
+          return e.clientX;
+        }
+        function onStart(e) {
+          dragging = true;
+          setPos(getX(e));
+          if (e.cancelable) e.preventDefault();
+        }
+        function onMove(e) {
+          if (!dragging) return;
+          setPos(getX(e));
+          if (e.cancelable) e.preventDefault();
+        }
+        function onEnd() { dragging = false; }
+
+        frame.addEventListener('mousedown',  onStart);
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup',   onEnd);
+        frame.addEventListener('touchstart', onStart, { passive: false });
+        window.addEventListener('touchmove', onMove,  { passive: false });
+        window.addEventListener('touchend',  onEnd);
+      });
+    })();
+  </script>
+
+</body>
+</html>

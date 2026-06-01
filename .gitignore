@@ -1,0 +1,11 @@
+# Project page artifacts
+*.orig.png
+assets/paper.pdf
+# Unused baseline folders (kept locally, not deployed)
+Figures/Ours/
+Figures/RDNet/
+Figures/RobustSIRR/
+
+.DS_Store
+.vscode/
+.idea/
