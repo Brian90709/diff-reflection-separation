@@ -2,7 +2,7 @@
 
 GitHub Pages source for the CVPR 2026 project page.
 
-- 🌐 Live page: https://brian90709.github.io/diff-reflection-separation-page/
-- 💻 Code: https://github.com/Brian90709/diff-reflection-separation
+- 🌐 Live page: https://brian90709.github.io/diff-reflection-separation/
+- 💻 Code: https://github.com/Brian90709/diff-reflection-separation-code
 - 🤗 Models: https://huggingface.co/Brian9999/diff-reflection-separation
-- 📄 Paper: arXiv (coming soon)
+- 📄 Paper: https://arxiv.org/abs/2606.04107
